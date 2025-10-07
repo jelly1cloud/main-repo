@@ -1,0 +1,23 @@
+import random
+import datetime
+
+quotes = [
+    "Stay hungry, stay foolish.",
+    "Simplicity is the ultimate sophistication.",
+    "Code is like humor. When you have to explain it, it’s bad.",
+    "The best way to predict the future is to invent it.",
+    "First, solve the problem. Then, write the code."
+]
+
+def get_random_quote():
+    return random.choice(quotes)
+
+def log_quote():
+    quote = get_random_quote()
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open("quote_log.txt", "a") as file:
+        file.write(f"[{timestamp}] {quote}\n")
+    print(f"{quote}\n— Logged at {timestamp}")
+
+if __name__ == "__main__":
+    log_quote()
