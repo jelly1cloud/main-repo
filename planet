@@ -1,0 +1,19 @@
+import random
+
+def generate_planet():
+    names = ["Aurelia", "NeoTerra", "Vexilon", "Kryos-9", "Lumara", "Zyphora"]
+    climates = ["tropical", "icy", "desert", "oceanic", "volcanic", "toxic"]
+    features = ["floating mountains", "bioluminescent forests", "crystal caves", "acid lakes", "magnetic storms"]
+    species = ["Zyr", "Talari", "Ormex", "Vyrians", "Khelt"]
+
+    planet = {
+        "name": random.choice(names),
+        "climate": random.choice(climates),
+        "feature": random.choice(features),
+        "dominant_species": random.choice(species)
+    }
+
+    return planet
+
+if __name__ == "__main__":
+    print(generate_planet())
