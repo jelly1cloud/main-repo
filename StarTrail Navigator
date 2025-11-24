@@ -1,0 +1,113 @@
+import random
+import math
+from dataclasses import dataclass, field
+
+
+# -----------------------------
+#   DATA STRUCTURES
+# -----------------------------
+
+@dataclass
+class Star:
+    name: str
+    x: float
+    y: float
+    z: float
+    star_type: str
+    connections: list = field(default_factory=list)
+
+    def distance_to(self, other: "Star") -> float:
+        return math.sqrt(
+            (self.x - other.x)**2 +
+            (self.y - other.y)**2 +
+            (self.z - other.z)**2
+        )
+
+
+class Galaxy:
+    STAR_TYPES = ["Yellow Dwarf", "Red Giant", "Blue Hypergiant",
+                  "White Dwarf", "Neutron Star", "Binary System"]
+
+    def __init__(self, count=100):
+        self.stars = []
+        self.generate_stars(count)
+        self.connect_stars()
+
+    def generate_stars(self, count):
+        for i in range(count):
+            star = Star(
+                name=f"ST-{i}",
+                x=random.uniform(-1000, 1000),
+                y=random.uniform(-1000, 1000),
+                z=random.uniform(-1000, 1000),
+                star_type=random.choice(self.STAR_TYPES)
+            )
+            self.stars.append(star)
+
+    def connect_stars(self):
+        # Connect each star with several nearest neighbors
+        for star in self.stars:
+            distances = sorted(
+                [(other, star.distance_to(other)) for other in self.stars if other != star],
+                key=lambda x: x[1]
+            )
+            for neighbor, dist in distances[:5]:
+                star.connections.append(neighbor)
+
+    def find_star(self, name):
+        for star in self.stars:
+            if star.name == name:
+                return star
+        return None
+
+    def find_route(self, start_name, end_name):
+        start = self.find_star(start_name)
+        end = self.find_star(end_name)
+
+        if not start or not end:
+            return None
+
+        visited = set()
+        queue = [(start, [start])]
+
+        while queue:
+            current, path = queue.pop(0)
+            if current == end:
+                return path
+
+            visited.add(current)
+
+            for neighbor in current.connections:
+                if neighbor not in visited:
+                    queue.append((neighbor, path + [neighbor]))
+
+        return None
+
+
+# -----------------------------
+#   INTERFACE
+# -----------------------------
+
+def print_route(route):
+    if not route:
+        print("No route found.")
+        return
+
+    print("Route:")
+    for s in route:
+        print(f" → {s.name} ({s.star_type})")
+
+
+def random_pair(galaxy):
+    s1, s2 = random.sample(galaxy.stars, 2)
+    return s1.name, s2.name
+
+
+# -----------------------------
+#   MAIN
+# -----------------------------
+
+if __name__ == "__main__":
+    galaxy = Galaxy(count=150)
+
+    start, end = random_pair(galaxy)
