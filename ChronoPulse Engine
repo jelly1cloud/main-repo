@@ -1,0 +1,71 @@
+import random
+import time
+from dataclasses import dataclass, field
+
+
+# --------------------------------------------------
+#  CORE STRUCTURES
+# --------------------------------------------------
+
+@dataclass
+class Event:
+    timestamp: int
+    event_type: str
+    agent_id: int
+    data: dict
+
+
+@dataclass
+class Agent:
+    id: int
+    energy: int
+    mood: float
+    knowledge: float
+    log: list = field(default_factory=list)
+
+    def apply_event(self, event: Event):
+        if event.event_type == "ENERGY_SHIFT":
+            self.energy += event.data["delta"]
+        elif event.event_type == "MOOD_SHIFT":
+            self.mood += event.data["delta"]
+        elif event.event_type == "KNOWLEDGE_GAIN":
+            self.knowledge += event.data["amount"]
+
+        self.log.append(event)
+
+
+# --------------------------------------------------
+#  ENGINE
+# --------------------------------------------------
+
+class ChronoPulse:
+    EVENT_TYPES = ["ENERGY_SHIFT", "MOOD_SHIFT", "KNOWLEDGE_GAIN"]
+
+    def __init__(self, agents_count=50, duration=500):
+        self.agents = []
+        self.duration = duration
+        self.current_time = 0
+        self.events = []
+        self.create_agents(agents_count)
+
+    # Creating agents
+    def create_agents(self, count):
+        for i in range(count):
+            agent = Agent(
+                id=i,
+                energy=random.randint(50, 100),
+                mood=round(random.uniform(0.3, 1.0), 2),
+                knowledge=round(random.uniform(0, 10), 2)
+            )
+            self.agents.append(agent)
+
+    # Event generator
+    def generate_random_event(self):
+        agent = random.choice(self.agents)
+        event_type = random.choice(self.EVENT_TYPES)
+
+        if event_type == "ENERGY_SHIFT":
+            data = {"delta": random.randint(-10, 15)}
+        elif event_type == "MOOD_SHIFT":
+            data = {"delta": round(random.uniform(-0.2, 0.3), 2)}
+        else:  # KNOWLEDGE
