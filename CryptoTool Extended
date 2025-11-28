@@ -1,0 +1,43 @@
+// CryptoTool Extended - utility for hashing and basic wallet ops
+
+import crypto from 'crypto';
+
+export class CryptoTool {
+  static sha256(input) {
+    return crypto.createHash('sha256').update(input).digest('hex');
+  }
+
+  static generatePrivateKey() {
+    return crypto.randomBytes(32).toString('hex');
+  }
+
+  static privateKeyToPublicKey(privateKey) {
+    const ecdh = crypto.createECDH('secp256k1');
+    ecdh.setPrivateKey(Buffer.from(privateKey, 'hex'));
+    return ecdh.getPublicKey('hex');
+  }
+
+  static createWallet() {
+    const privateKey = this.generatePrivateKey();
+    const publicKey = this.privateKeyToPublicKey(privateKey);
+    const address = this.sha256(publicKey).slice(0, 40);
+    return { privateKey, publicKey, address };
+  }
+
+  static signMessage(message, privateKey) {
+    const sign = crypto.createSign('SHA256');
+    sign.update(message);
+    sign.end();
+    const signature = sign.sign(Buffer.from(privateKey, 'hex')).toString('hex');
+    return signature;
+  }
+
+  static verifySignature(message, signature, publicKey) {
+    const verify = crypto.createVerify('SHA256');
+    verify.update(message);
+    verify.end();
+    return verify.verify(Buffer.from(publicKey, 'hex'), Buffer.from(signature, 'hex'));
+  }
+}
+
+export default CryptoTool;
