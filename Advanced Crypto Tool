@@ -1,0 +1,155 @@
+#!/usr/bin/env python3
+"""
+Advanced Crypto Analysis Toolkit
+--------------------------------
+A multi-module script that fetches market data (mocked), performs indicators,
+generates alerts, simulates portfolio performance, and includes basic
+on-chain analytics mock functions.
+"""
+
+import math
+import time
+import random
+from dataclasses import dataclass, field
+from typing import List, Dict, Tuple
+
+# --------------------------------------------------------------
+# Data Models
+# --------------------------------------------------------------
+@dataclass
+class Candle:
+    timestamp: int
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: float
+
+@dataclass
+class MarketPair:
+    symbol: str
+    candles: List[Candle] = field(default_factory=list)
+
+@dataclass
+class Portfolio:
+    balance_usd: float
+    positions: Dict[str, float] = field(default_factory=dict)
+
+# --------------------------------------------------------------
+# Mocked Data Fetcher
+# --------------------------------------------------------------
+def fetch_market_data(symbol: str, limit: int = 200) -> MarketPair:
+    """Simulates fetching candle data."""
+    candles = []
+    price = random.uniform(100, 3000)
+    for i in range(limit):
+        drift = random.uniform(-1, 1)
+        open_p = price
+        close_p = price + drift
+        high_p = max(open_p, close_p) + random.uniform(0, 1)
+        low_p = min(open_p, close_p) - random.uniform(0, 1)
+        volume = random.uniform(10, 300)
+
+        candles.append(Candle(
+            timestamp=int(time.time()) - (limit - i) * 60,
+            open=open_p,
+            high=high_p,
+            low=low_p,
+            close=close_p,
+            volume=volume
+        ))
+        price = close_p
+    return MarketPair(symbol, candles)
+
+# --------------------------------------------------------------
+# Indicators
+# --------------------------------------------------------------
+def sma(values: List[float], period: int) -> float:
+    return sum(values[-period:]) / period if len(values) >= period else 0
+
+def ema(values: List[float], period: int) -> float:
+    if len(values) < period:
+        return 0
+    k = 2 / (period + 1)
+    ema_value = sum(values[:period]) / period
+    for price in values[period:]:
+        ema_value = price * k + ema_value * (1 - k)
+    return ema_value
+
+def rsi(values: List[float], period: int = 14) -> float:
+    if len(values) < period:
+        return 0
+    gains = []
+    losses = []
+    for i in range(1, period + 1):
+        diff = values[-i] - values[-i-1]
+        if diff > 0:
+            gains.append(diff)
+        else:
+            losses.append(abs(diff))
+    avg_gain = sum(gains) / period
+    avg_loss = sum(losses) / period if sum(losses) != 0 else 1e-9
+    rs = avg_gain / avg_loss
+    return 100 - (100 / (1 + rs))
+
+# --------------------------------------------------------------
+# Signal Generator
+# --------------------------------------------------------------
+def generate_signals(market: MarketPair) -> Dict[str, float]:
+    closes = [c.close for c in market.candles]
+    s50 = sma(closes, 50)
+    e21 = ema(closes, 21)
+    r = rsi(closes)
+
+    return {
+        "sma50": s50,
+        "ema21": e21,
+        "rsi": r,
+        "trend": "bullish" if e21 > s50 else "bearish",
+        "rsi_state": "overbought" if r > 70 else "oversold" if r < 30 else "neutral"
+    }
+
+# --------------------------------------------------------------
+# On-Chain Analytics (Mock)
+# --------------------------------------------------------------
+def onchain_wallet_activity(address: str) -> Dict[str, float]:
+    return {
+        "tx_count_24h": random.randint(0, 120),
+        "inflow_usd": random.uniform(0, 50000),
+        "outflow_usd": random.uniform(0, 50000),
+        "active_rank": random.randint(1, 100000)
+    }
+
+# --------------------------------------------------------------
+# Portfolio Simulator
+# --------------------------------------------------------------
+def simulate_portfolio(portfolio: Portfolio, market: MarketPair, days: int = 30) -> float:
+    closes = [c.close for c in market.candles]
+    if not closes:
+        return portfolio.balance_usd
+    growth_factor = random.uniform(0.9, 1.3)
+    return portfolio.balance_usd * growth_factor
+
+# --------------------------------------------------------------
+# Main Runner
+# --------------------------------------------------------------
+def main():
+    market = fetch_market_data("ETHUSDT")
+    signals = generate_signals(market)
+    portfolio = Portfolio(balance_usd=5000, positions={"ETH": 1.2})
+    projected = simulate_portfolio(portfolio, market)
+    activity = onchain_wallet_activity("0xMockedWallet123")
+
+    print("--- MARKET SIGNALS ---")
+    for k, v in signals.items():
+        print(f"{k}: {v}")
+
+    print("\n--- PORTFOLIO SIMULATION (30 days) ---")
+    print(f"Projected balance: ${projected:.2f}")
+
+    print("\n--- ON-CHAIN ANALYTICS ---")
+    for k, v in activity.items():
+        print(f"{k}: {v}")
+
+if __name__ == "__main__":
+    main()
