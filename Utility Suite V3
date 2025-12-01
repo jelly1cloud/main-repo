@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+"""
+Utility Suite v3
+-----------------
+A large multi-purpose toolkit including:
+- File hashing
+- Simple encryption
+- Random data generator
+- Log analyzer
+- Mini async task runner
+"""
+
+import os
+import hashlib
+import json
+import random
+import asyncio
+from datetime import datetime
+from typing import List, Callable
+
+# --------------------------------------------------
+# File Hashing
+# --------------------------------------------------
+def hash_file(path: str, method: str = "sha256") -> str:
+    h = hashlib.new(method)
+    with open(path, 'rb') as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+# --------------------------------------------------
+# Simple Encryption (XOR)
+# --------------------------------------------------
+def xor_encrypt(data: bytes, key: int) -> bytes:
+    return bytes([b ^ key for b in data])
+
+def xor_encrypt_file(in_path: str, out_path: str, key: int):
+    with open(in_path, 'rb') as f:
+        data = f.read()
+    enc = xor_encrypt(data, key)
+    with open(out_path, 'wb') as f:
+        f.write(enc)
+
+# --------------------------------------------------
+# Random Data Generator
+# --------------------------------------------------
+def generate_random_profile() -> dict:
+    return {
+        "id": random.randint(100000, 999999),
+        "username": f"user{random.randint(1000,9999)}",
+        "score": random.uniform(0, 100),
+        "premium": random.choice([True, False]),
+        "created": datetime.utcnow().isoformat()
+    }
+
+# --------------------------------------------------
+# Log Analyzer
+# --------------------------------------------------
+def analyze_logs(log_lines: List[str]) -> dict:
+    errors = [l for l in log_lines if "ERROR" in l]
+    warnings = [l for l in log_lines if "WARN" in l]
+    info = [l for l in log_lines if "INFO" in l]
+    return {
+        "total": len(log_lines),
+        "errors": len(errors),
+        "warnings": len(warnings),
+        "info": len(info)
+    }
+
+# --------------------------------------------------
+# Async Task Runner
+# --------------------------------------------------
+async def run_tasks(tasks: List[Callable[[], None]]):
+    for t in tasks:
+        await asyncio.sleep(random.uniform(0.1, 0.5))
+        t()
+
+# --------------------------------------------------
+# Runner
+# --------------------------------------------------
+def main():
+    # Random profile
+    print("--- RANDOM PROFILE ---")
+    print(json.dumps(generate_random_profile(), indent=2))
+
+    # Log analyzer (demo)
+    logs = [
+        "INFO Start system",
+        "WARN Low memory",
+        "ERROR File missing",
+        "INFO Operation complete",
+    ]
+    print("\n--- LOG ANALYZER ---")
+    print(analyze_logs(logs))
+
+    # Async tasks
+    print("\n--- TASK RUNNER ---")
+    async def demo():
+        await run_tasks([
+            lambda: print("Task 1 done"),
+            lambda: print("Task 2 done"),
+            lambda: print("Task 3 done")
+        ])
+    asyncio.run(demo())
+
+if __name__ == "__main__":
+    main()
